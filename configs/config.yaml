@@ -4,11 +4,11 @@ project:
   seed: 42
 
 paths:
-  data_root: data
+  data_root: /content/drive/MyDrive/waste_qc_data
   raw_taco: data/raw/taco
   raw_trashnet: data/raw/trashnet
   synthetic_root: data/synthetic
-  processed_root: data/processed
+  processed_root: /content/drive/MyDrive/waste_qc_data
   outputs: outputs
   figures: outputs/figures
   logs: outputs/logs
