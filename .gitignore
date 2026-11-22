@@ -1,0 +1,6 @@
+__pycache__/
+data/raw/
+data/synthetic/
+data/processed/
+outputs/
+!outputs/**/.gitkeep

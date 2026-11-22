@@ -1,0 +1,106 @@
+# Project 07 - Waste Sorting & Recycling Quality Controller (CSAI3027P Deep Learning)
+project:
+  name: waste_qc
+  seed: 42
+
+paths:
+  data_root: data
+  raw_taco: data/raw/taco
+  raw_trashnet: data/raw/trashnet
+  synthetic_root: data/synthetic
+  processed_root: data/processed
+  outputs: outputs
+  figures: outputs/figures
+  logs: outputs/logs
+  checkpoints: outputs/checkpoints
+
+# Unified class space (TrashNet's six categories; TACO is mapped onto it)
+classes:
+  names: [cardboard, glass, metal, paper, plastic, trash]
+  rare: [trash]                    # under-represented -> VAE/DCGAN augmentation target
+  recyclable: [cardboard, glass, metal, paper, plastic]
+  contaminant: [trash]             # counts against recycling purity
+
+# Ordered keyword rules (first match wins, case-insensitive) on TACO "name supercategory".
+# Anything unmatched falls back to `trash`.
+taco_keyword_map:
+  glass:     [glass, jar]
+  metal:     [metal, aluminium, aluminum, foil, "pop tab", scrap, "drink can", "food can", "aerosol", "can"]
+  cardboard: [cardboard, carton, "pizza box", "egg carton", "toilet tube"]
+  paper:     [paper, magazine, newspaper, "normal paper", tissue, "paper bag"]
+  plastic:   [plastic, bottle, "bottle cap", lid, straw, blister, styrofoam, utensil, "plastic bag", wrapper, container, squeezable, cup]
+
+data:
+  image_size: 128                  # working resolution for synthetic data and fundamentals
+  dedup:
+    enabled: true
+    hash_size: 8
+    max_hamming_distance: 4        # <= distance -> near-duplicate
+  split:
+    ratios: {train: 0.7, val: 0.15, test: 0.15}
+    group_by: scene                # scene | image
+  crop_padding: 0.10               # fraction padding around bbox for classification crops
+  urls:
+    taco_annotations: https://raw.githubusercontent.com/pedropro/TACO/master/data/annotations.json
+    trashnet_zip: https://github.com/garythung/trashnet/raw/master/data/dataset-resized.zip
+  # Synthetic data is OPT-IN (unit tests / CI only). Real TrashNet/TACO are required for all real runs.
+  synthetic:
+    n_scenes: 120
+    n_trashnet_per_class: 60
+    max_items_per_scene: 4
+    duplicate_fraction: 0.10
+    noise_std: 6.0
+    rare_class_weight: 0.5         # relative sampling weight of rare classes
+
+# ----- Unit I: from-scratch fundamentals -----
+fundamentals:
+  mlp:
+    hidden_sizes: [64, 32]
+    hidden_activation: relu        # relu | sigmoid | tanh
+    init: he                       # random | xavier | he
+    loss: cross_entropy            # cross_entropy | mse
+    l2: 0.0
+  training:
+    epochs: 60
+    batch_size: 32
+    val_fraction: 0.2
+  optimizers:
+    batch_gd:  {lr: 0.5}
+    sgd:       {lr: 0.05}
+    momentum:  {lr: 0.02, beta: 0.9}
+    nag:       {lr: 0.02, beta: 0.9}
+  gradient_check:
+    eps: 1.0e-5
+    tolerance: 1.0e-6
+
+# ----- Unit III: experiments (consumed in Phase 2) -----
+experiments:
+  epochs: 40
+  inits: [random, xavier, he]
+  weight_decay: [0.0, 0.001, 0.01]
+  dropout: [0.0, 0.3, 0.5]
+  batch_norm: [false, true]
+  augmentation: [false, true]
+
+# ----- Unit IV: vision (consumed in Phase 2) -----
+vision:
+  classification: {models: [resnet50, googlenet], epochs: 5, batch_size: 16, lr: 1.0e-3, pretrained: false}
+  segmentation:   {models: [unet, maskrcnn], epochs: 3, batch_size: 4, lr: 1.0e-3}
+  detection:      {models: [yolov8n, fasterrcnn], epochs: 3, batch_size: 4, conf: 0.25, iou: 0.5}
+
+# ----- Unit V: advanced (consumed in Phase 3) -----
+advanced:
+  lstm: {seq_len: 30, hidden: 64, layers: 2, epochs: 20, spike_threshold: 0.35}
+  vae:  {latent_dim: 16, epochs: 20, batch_size: 32, beta: 1.0}
+  dcgan: {enabled: false, epochs: 10}
+
+# ----- Deployment acceptance thresholds (Industry readiness) -----
+deployment:
+  min_purity_rate: 0.95
+  min_map50: 0.70
+  min_map50_95: 0.45
+  min_macro_f1: 0.85
+  min_fps: 15.0
+  max_latency_ms: 80.0
+  max_memory_mb: 2048.0
+  max_robustness_drop: 0.15        # max relative metric drop under stress tests

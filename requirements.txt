@@ -1,0 +1,22 @@
+# Core DL & Vision
+torch>=2.1
+torchvision>=0.16
+ultralytics>=8.1
+opencv-python>=4.8
+albumentations>=1.3
+# Math & Analysis
+numpy>=1.24
+scipy>=1.10
+scikit-learn>=1.3
+pandas>=2.0
+Pillow>=10.0
+imagehash>=4.3
+# Visualization & App
+matplotlib>=3.7
+seaborn>=0.13
+streamlit>=1.30
+typer>=0.9
+# Engineering & Testing
+pyyaml>=6.0
+pytest>=7.4
+tqdm>=4.66
