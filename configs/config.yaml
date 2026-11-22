@@ -85,7 +85,7 @@ experiments:
 # ----- Unit IV: vision (consumed in Phase 2) -----
 vision:
   classification: {models: [resnet50, googlenet], epochs: 5, batch_size: 16, lr: 1.0e-3, pretrained: false}
-  segmentation:   {models: [unet, maskrcnn], epochs: 3, batch_size: 4, lr: 1.0e-3}
+  segmentation:   {models: [unet], epochs: 3, batch_size: 4, lr: 1.0e-3}
   detection:      {models: [yolov8n, fasterrcnn], epochs: 3, batch_size: 4, conf: 0.25, iou: 0.5}
 
 # ----- Unit V: advanced (consumed in Phase 3) -----
